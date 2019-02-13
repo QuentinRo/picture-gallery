@@ -24,7 +24,7 @@ class PictureController extends Controller
      */
     public function create()
     {
-        //
+      return view('pictures.create');
     }
 
     /**
@@ -35,7 +35,13 @@ class PictureController extends Controller
      */
     public function store(Request $request)
     {
-        //
+      $picture = new Picture($request->all());
+      $picture->gallery_id = request()->route('gallery');
+      $picture->path = $request->path->store('pictures', 'local');
+      
+      $picture->save();
+      
+      return redirect()->route('galleries.show', request()->route('gallery'));
     }
 
     /**
