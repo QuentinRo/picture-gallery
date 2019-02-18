@@ -14,4 +14,9 @@ class Picture extends Model
   protected $fillable = [
       'title',
   ];
+
+  public function gallery()
+  {
+    return $this->belongsTo('App\Gallery');
+  }
 }
