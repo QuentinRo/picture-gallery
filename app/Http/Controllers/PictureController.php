@@ -39,7 +39,7 @@ class PictureController extends Controller
     {
       $picture = new Picture($request->all());
       $picture->gallery_id = $gallery->id;
-      $picture->path = $request->path->store('pictures', 'local');
+      $picture->path = $request->path->store('pictures', 's3');
       
       $picture->save();
       
@@ -55,7 +55,7 @@ class PictureController extends Controller
     public function show(Gallery $gallery, Picture $picture, Request $request)
     {
       if ( Str::startsWith($request->header('Accept'), 'image') ) {
-        return response()->file(\Storage::disk('local')->getAdapter()->getPathPrefix() . $picture->path);
+        return redirect(\Storage::disk('s3')->temporaryUrl($picture->path, now()->addMinutes(1)));
       }
       else {
         return view('pictures.show', compact('gallery', 'picture'));
