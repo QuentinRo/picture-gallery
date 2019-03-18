@@ -26,7 +26,42 @@ class PictureController extends Controller
      */
     public function create(Gallery $gallery)
     {
-      return view('pictures.create', compact('gallery'));
+      $client = new \Aws\S3\S3Client([
+          'version' => 'latest',
+          'region' => env('AWS_DEFAULT_REGION'),
+      ]);
+      $bucket = env('AWS_BUCKET');
+
+      // Set some defaults for form input fields
+      $formInputs = ['acl' => 'private', 'key' => 'phi/pictures/' . Str::random(40)];
+
+      // Construct an array of conditions for policy
+      $options = [
+          ['acl' => 'private'],
+          ['bucket' => $bucket],
+          ['starts-with', '$key', 'phi/pictures/'],
+      ];
+
+      // Optional: configure expiration time string
+      $expires = '+2 hours';
+
+      $postObject = new \Aws\S3\PostObjectV4(
+          $client,
+          $bucket,
+          $formInputs,
+          $options,
+          $expires
+      );
+
+      // Get attributes to set on an HTML form, e.g., action, method, enctype
+      $formAttributes = $postObject->getFormAttributes();
+
+      // Get form input fields. This will include anything set as a form input in
+      // the constructor, the provided JSON policy, your AWS access key ID, and an
+      // auth signature.
+      $formInputs = $postObject->getFormInputs();
+      
+      return view('pictures.create', compact('gallery', 'formAttributes' , 'formInputs'));
     }
 
     /**
@@ -39,7 +74,6 @@ class PictureController extends Controller
     {
       $picture = new Picture($request->all());
       $picture->gallery_id = $gallery->id;
-      $picture->path = $request->path->store('pictures', 's3');
       
       $picture->save();
       
